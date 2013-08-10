@@ -28,8 +28,10 @@
  */
 
 package com.sigmatauproductions.isomatrix.tiles;
-import com.sigmatauproductions.isomatrix.*;
 
+import com.sigmatauproductions.isomatrix.*;
+import com.sigmatauproductions.isomatrix.props.Prop;
+import com.sigmatauproductions.isomatrix.util.Transform;
 import org.newdawn.slick.*;
 
 /**
@@ -109,6 +111,17 @@ public final class Tile {
     private Tile() {}
     
     /**
+     * Used internally to determine whether the tile contains a prop that
+     * requires registration.
+     */
+    private boolean registered = false;
+    
+    /**
+     * Used internally to store the prop currently registered to this tile.
+     */
+    private Prop registeredProp = null;
+    
+    /**
      * The typical constructor of a tile, used to populate the object with
      * basic values to be manipulated by the user or by a {@link TileMap}.
      * 
@@ -186,7 +199,7 @@ public final class Tile {
      * @see Tile#getImage();
      */
     public void setImage(Image im) {
-        if (im.getWidth() != xDim || im.getHeight() != yDim) return;
+        if (im.getWidth() != xDim || im.getHeight() != yDim) { return; }
         image = im;
     }
     
@@ -277,6 +290,43 @@ public final class Tile {
      */
     public Transform getDrawPositionRelative() {
         return new Transform(position.x, position.y+position.z, 0);
+    }
+    
+    /**
+     * Sets the registered status of the tile.
+     * 
+     * If set to false, the prop value currently cached inside the tile is
+     * automatically deleted (set to null).
+     * 
+     * @param value 
+     */
+    public void setRegistered(boolean value) {
+        registered = value;
+        if (!value) {
+            registeredProp = null;
+        }
+    }
+    
+    /**
+     * Returns the registered status of this tile.
+     */
+    public boolean isRegistered() {
+        return registered;
+    }
+    
+    /**
+     * Returns the prop currently on this tile.
+     */
+    public Prop getProp() {
+        return registeredProp;
+    }
+    
+    /**
+     * Sets this tile's prop to the specified value.
+     */
+    public void setProp(Prop p) {
+        if (p == null) { return; }
+        registeredProp = p;
     }
     
 }

@@ -1,0 +1,9 @@
+The .class files are included in this package for SlopeType and Direction
+because they correspond to .java files containing only enums.  For whatever
+reason, Java is not compiling these files by default, and you may run into
+issues at runtime (such as a NoClassDefFoundError) if you try to run the project
+without these files.  Thus, the .class files are included and pre-compiled for
+your convenience.
+
+Note that you will need to recompile these files individually if you make any
+changes to the structure or functionality of SlopeType.java or Direction.java.

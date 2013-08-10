@@ -29,23 +29,170 @@
 
 package com.sigmatauproductions.isomatrix;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+
+/**
+ * The Isomatrix global class, containing all variables that may need to be
+ * accessible to the entire project.
+ * @author Will
+ */
 public final class Globals {
     
-    private static final String blank = "";
-    public static StringBuilder log = new StringBuilder(blank);
+    /**
+     * The version string of this build of Isomatrix.
+     */
+    public static final String ISOMATRIX_VERSION = "Isomatrix v0.2";
     
+    /**
+     * Used for whether or not the current build is a debug build.
+     */
+    public static boolean DEBUG_ENABLED = true;
+    
+    /**
+     * Stores the current system's newline character.
+     */
+    public static final String newline = System.getProperty("line.separator");
+    
+    /**
+     * Contains the log of the current session.
+     */
+    private static StringBuilder log = new StringBuilder(ISOMATRIX_VERSION
+            + " - Began logging at " + new java.util.Date().toString()
+            + newline);
+    
+    /**
+     * The default pixel width of a {@link Tile}.
+     */
     public static final int DEFAULT_TILE_X = 64;
+    
+    /**
+     * The default pixel height of a {@link Tile}.
+     */
     public static final int DEFAULT_TILE_Y = 48;
+    
+    /**
+     * The smallest pixel-width of a tile.
+     */
     public static final int MIN_TILE_X = 16;
+    
+    /**
+     * The smallest pixel-height of a tile.
+     */
     public static final int MIN_TILE_Y = 16;
+    
+    /**
+     * The default x-size of a tile.
+     */
     public static final int DEFAULT_X_SIZE = 32;
+    
+    /**
+     * The default y-size of a tile.
+     */
     public static final int DEFAULT_Y_SIZE = 32;
     
+    /**
+     * A string leading to the resource directory of Isomatrix, relative to the
+     * classpath.
+     */
     public static final String RESOURCE_DIR = "resources/";
+    
+    /**
+     * A string leading to the tileset directory of Isomatrix, relative to the
+     * classpath.
+     */
     public static final String TILESET_DIR = RESOURCE_DIR+"tilesets/";
+    
+    /**
+     * A string naming the default tileset.
+     */
     public static final String DEFAULT_TILESET = "default";
     
+    /**
+     * A string naming the prop directory of Isomatrix, relative to the
+     * classpath.
+     */
+    public static final String PROP_DIR = RESOURCE_DIR+"props/";
     
+    /**
+     * Logs the specified warning to the debug log.
+     */
+    public static void logWarning(String warning) {
+        log.append(new java.util.Date().toString());
+        log.append(" ** Warning: ");
+        log.append(warning);
+        log.append(newline);
+        
+        if (DEBUG_ENABLED) {
+            System.out.println("** Warning: " + warning);
+        }
+    }
     
+    /**
+     * Logs the specified error to the debug log, and also logs a stacktrace
+     * of the error if requested.  In the event of a debug build, logging an
+     * error will cause the entire program to exit after dumping the debug log
+     * to a file named {@code debut.txt}.
+     */
+    public static void logError(String err, boolean stacktrace) {
+        log.append(new java.util.Date().toString());
+        log.append(" *** Error: ");
+        log.append(err);
+        log.append(newline);
+        
+        // If it's a debug log, log the stacktrace--or if we've explicitly
+        // requested one
+        if (stacktrace || DEBUG_ENABLED) {
+            log.append(Thread.currentThread().getStackTrace());
+            log.append(newline);
+            
+            // ... and print it to the console.
+            System.out.print("*** Error: ");
+            System.out.println(err);
+            System.out.println(Thread.currentThread().getStackTrace());
+            System.out.println();
+        }
+        
+        // Spew a debug log to a file if a serious error occurs (but only under
+        // the supervision of a debug build)
+        if (DEBUG_ENABLED) {
+            log.append("Spewing debug log...");
+            try (PrintWriter spew = new PrintWriter("debug.txt")) {
+                spew.println(log.toString());
+                spew.flush();
+            } catch (FileNotFoundException e) {
+                System.err.println("CRITICAL: Could not spew debug "
+                        + "log to file!");
+                e.printStackTrace(System.err);
+            }
+            
+            System.exit(-1);
+        }
+    }
+    
+    /**
+     * Logs the specified message to the debug log.
+     */
+    public static void logMessage(String message) {
+        log.append(new java.util.Date().toString());
+        log.append(" * ");
+        log.append(message);
+        log.append(newline);
+        
+        if (DEBUG_ENABLED) { System.out.println("* " + message); }
+    }
+    
+    /**
+     * Returns the debug log in the form of a String.
+     * @return 
+     */
+    public static String getLog() {
+        return log.toString();
+    }
+    
+    /**
+     * The default constructor, set to private to ensure the class is always 
+     * accessed from a static context.
+     */
     private Globals() {}
 }

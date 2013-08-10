@@ -31,6 +31,11 @@ package com.sigmatauproductions.isomatrix.tiles;
 
 import org.newdawn.slick.*;
 import com.sigmatauproductions.isomatrix.*;
+import com.sigmatauproductions.isomatrix.util.ConfigFile;
+import java.util.Scanner;
+import java.io.File;
+import java.io.IOException;
+import java.io.FileNotFoundException;
 
 /**
  * Contains an array of images and their various properties, used to specify the
@@ -68,6 +73,12 @@ public final class Tileset {
      */
     private int heightOffset;
     
+    private ConfigFile config = null;
+    
+    private String name = "";
+    
+    private int propOffset = 8;
+    
     /**
      * Creates a new tileset using the default tile images and default height
      * offset.
@@ -77,12 +88,18 @@ public final class Tileset {
     public Tileset() throws SlickException {
         int max = tiles.length;
         for (int i = 0; i < max; i++) {
-            tiles[i] = new Image(Globals.TILESET_DIR + Globals.DEFAULT_TILESET + "/" + (""+(i+1)) + ".png");
+            tiles[i] = new Image(Globals.TILESET_DIR
+                    + Globals.DEFAULT_TILESET + "/" + (""+(i+1)) + ".png");
         }
         
         tileSizeX = tiles[0].getWidth();
         tileSizeY = tiles[0].getHeight();
         this.heightOffset = DEFAULT_HEIGHT_OFFSET;
+        
+        readConfig(Globals.TILESET_DIR + Globals.DEFAULT_TILESET);
+        
+        // Read config file (tileset.txt) line by line and get the prop offset,
+        // as well as the proper name of the tileset.
     }
     
     /**
@@ -97,12 +114,14 @@ public final class Tileset {
     public Tileset(String directory, int heightOffset) throws SlickException {
         int max = tiles.length;
         for (int i = 0; i < max; i++) {
-            tiles[i] = new Image(Globals.TILESET_DIR + directory + "/" + (""+(i+1)) + ".png");
+            tiles[i] = new Image(Globals.TILESET_DIR 
+                    + directory + "/" + (""+(i+1)) + ".png");
         }
         
         tileSizeX = tiles[0].getWidth();
         tileSizeY = tiles[0].getHeight();
         this.heightOffset = heightOffset;
+        readConfig(Globals.TILESET_DIR+directory);
     }
     
     /**
@@ -142,5 +161,46 @@ public final class Tileset {
      */
     public Image getImage(int index) {
         return tiles[index];
+    }
+    
+    /**
+     * Returns the proper name of the tileset according to its tileset.cfg.
+     */
+    public String getName() {
+        return name;
+    }
+    
+    /**
+     * Returns the prop offset of the tileset according to its tileset.cfg.
+     */
+    public int getPropOffset() {
+        return propOffset;
+    }
+    
+    /**
+     * Used internally to read and parse the tileset.cfg of the tileset.
+     */
+    private void readConfig(String directory) {
+        int pO;
+        String n = "";
+        
+        try {
+            config = new ConfigFile(directory + "/tileset.cfg");
+            n = config.getValueByProperty("name");
+            pO = Integer.parseInt(config.getValueByProperty("propoffset"));
+        } catch (FileNotFoundException e) {
+            Globals.logWarning("tileset.cfg not found in " + directory +  "/ -"
+                    + " assuming default config values");
+            n = "Invalid";
+            pO = 8;
+        } catch (NumberFormatException e) {
+            Globals.logWarning("tileset.cfg in tileset directory \""
+                    + directory + "\" does not contain proper "
+                    + "offset values.  Assuming default offsets.");
+            pO = 8;
+        }
+        
+        this.name = n;
+        this.propOffset = pO;
     }
 }
