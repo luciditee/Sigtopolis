@@ -73,10 +73,21 @@ public final class Tileset {
      */
     private int heightOffset;
     
+    /**
+     * Contains the {@link ConfigFile} used at construction to enter default
+     * values.
+     */
     private ConfigFile config = null;
     
+    /**
+     * Stores the proper, user-readable name of the tileset.
+     */
     private String name = "";
     
+    /**
+     * The vertical offset (y-offset) in pixels that all Props 
+     * must be raised by in order to be placed correctly onto their anchor.
+     */
     private int propOffset = 8;
     
     /**

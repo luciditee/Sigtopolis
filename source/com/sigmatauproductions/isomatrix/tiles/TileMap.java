@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 import org.newdawn.slick.*;
 
 /**
@@ -65,10 +66,6 @@ public final class TileMap {
      * The maximum Y-size (height) of a TileMap.
      */
     public final int MAX_Y = 8192;
-    /**
-     * The default sea level of the TileMap, used if one is not defined later.
-     */
-    public final int DEFAULT_SEA_LEVEL = 0;
     /**
      * The offset used when drawing the TileMap.
      *
@@ -161,7 +158,8 @@ public final class TileMap {
 
         // Start by populating the array with the basic tiles
         for (int i = 0; i < tiles.length; i++) {
-            tiles[i] = new Tile(new Transform(), tileset.getImage(0).copy());
+            tiles[i] = new Tile(new Transform(), tileset);
+            tiles[i].setSlope(SlopeType.NONE, Direction.NORTH);
         }
 
         Transform rowOrigin = Transform.getOrigin();
@@ -207,12 +205,43 @@ public final class TileMap {
     /**
      * Sets the image of the specified {@link Tile} to be of a specific tile
      * from the map's {@link Tileset}.
+     * 
+     * <b>Warning!</b> It is not advisable to set the image of the tile manually
+     * when adjusting a tile's slope!  Use setTileSlope() instead.
      *
      * @param index
      * @param tilesetIndex
      */
     public void setTileImage(int index, int tilesetIndex) {
+        if (index > tiles.length || index < 0) { return; }
         tiles[index].setImage(tileset.getImage(tilesetIndex));
+    }
+    
+    /**
+     * Sets the slope of the specified tile and updates its image accordingly.
+     * 
+     * @param index The index of the tile.  Will return without doing anything
+     *              in the event of an invalid index.
+     * @param type The {@link SlopeType}.
+     * @param direction The {@link Direction}.
+     */
+    public void setTileSlope(int index, SlopeType type, Direction direction) {
+        if (index > tiles.length || index < 0) { return; }
+        tiles[index].setSlope(type, direction);
+    }
+    
+    /**
+     * Sets the slope of the specified tile and updates its image accordingly.
+     * 
+     * @param coords An array ({@code x = int[0], y = int[1]}) containing the
+     *                        tile coordinates.
+     * @param type The {@link SlopeType}.
+     * @param direction The {@link Direction}.
+     */
+    public void setTileSlope(int[] coords, SlopeType type, Direction direction){
+        int index = getTileByCoordinates(coords[0], coords[1]);
+        if (index < 0) { return; }
+        setTileSlope(index, type, direction);
     }
 
     /**
@@ -230,6 +259,7 @@ public final class TileMap {
      * @param height
      */
     public void setTileHeight(int index, int height) {
+        if (index > tiles.length || index < 0) { return; }
         tiles[index].position.z = -height * tileset.getHeightOffset();
     }
 
@@ -545,5 +575,67 @@ public final class TileMap {
      */
     public void setShowTileID(boolean show) {
         showTileIDs = show;
+    }
+    
+    /**
+     * 
+     * Randomizes the flat tiles (tiles with a {@link SlopeType} of
+     * {@code NONE}) to give variation to the TileMap's appearance.
+     * 
+     * The parameters in this method must add up to 1.0 in sum, otherwise
+     * this method will not work--logical, given that the parameters are
+     * actually values of probability.
+     * 
+     * @param first The likelihood of the first tile, from 0.0 to 1.0.
+     * @param second The likelihood of the second tile, from 0.0 to 1.0.
+     * @param third The likelihood of the third tile, from 0.0 to 1.0.
+     * @param fourth The likelihood of the fourth tile, from 0.0 to 1.0.
+     * @return Returns true upon success, and false if the parameters do not
+     *         equal 1.0 in sum.
+     */
+    public boolean randomizeFlats(double first, double second,
+            double third, double fourth) {
+        // First, make sure the arguments evaluate to 1.0 when added
+        double total = first+second+third+fourth;
+        
+        if (total != 1.0) {
+            return false;
+        }
+        
+        Random rand = new Random();
+        for (int i = 0; i < tiles.length; i++) {
+            // If the current tile is flat, randomize it.
+            if (tiles[i].getSlopeType() == SlopeType.NONE) {
+                // Calculate probability.  Usually, the first is the most common
+                // so we can omit that from the probability check and just use
+                // and else{} block for it later, due to the nature of
+                // probability (0.0 to 1.0).
+                boolean scnd = rand.nextDouble() <= second;
+                boolean thrd = rand.nextDouble() <= third;
+                boolean frth = rand.nextDouble() <= fourth;
+                
+                if (scnd) {
+                    tiles[i].setImage(tileset.getImage(1));
+                } else if (thrd) {
+                    tiles[i].setImage(tileset.getImage(2));
+                } else if (frth) {
+                    tiles[i].setImage(tileset.getImage(3));
+                } else {
+                    tiles[i].setImage(tileset.getImage(0));
+                }
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Randomizes the flat tiles (tiles with a {@link SlopeType} of
+     * {@code NONE}) to give variation to the TileMap's appearance, using only
+     * the default values of 0.6, 0.2, 0.1, and 0.1 for the likelihoods
+     * respectively.
+     */
+    public boolean randomizeFlats() {
+        return randomizeFlats(0.6, 0.2, 0.1, 0.1);
     }
 }

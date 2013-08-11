@@ -59,7 +59,7 @@ final class Slope {
      * 
      * @see Direction
      */
-    private Direction dir = null;
+    private Direction dir = Direction.NORTH;
     
     /**
      * The default constructor; creates a new Slope object with the default

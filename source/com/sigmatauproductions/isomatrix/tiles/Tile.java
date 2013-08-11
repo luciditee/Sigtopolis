@@ -103,14 +103,6 @@ public final class Tile {
     private Slope slope = new Slope();
     
     /**
-     * The default constructor.
-     * 
-     * Declared private to prevent inline initialization.
-     * 
-     */
-    private Tile() {}
-    
-    /**
      * Used internally to determine whether the tile contains a prop that
      * requires registration.
      */
@@ -122,27 +114,30 @@ public final class Tile {
     private Prop registeredProp = null;
     
     /**
+     * Used internally to store which tileset to draw images from.
+     */
+    private Tileset tileset;
+    
+    /**
+     * The default constructor, not to be used in a production environment.
+     * 
+     * Declared private to prevent inline initialization.
+     * 
+     */
+    private Tile() {}
+    
+    /**
      * The typical constructor of a tile, used to populate the object with
      * basic values to be manipulated by the user or by a {@link TileMap}.
      * 
      */
-    public Tile(Transform transform, Image image) {
-        this.xDim = image.getWidth();
-        this.yDim = image.getHeight();
+    public Tile(Transform transform, Tileset tileset) {
+        Image img = tileset.getImage(0);
+        this.xDim = img.getWidth();
+        this.yDim = img.getHeight();
         this.position = transform;
-        this.image = image;
-    }
-    
-    
-    /**
-     * Alias to the above constructor, but allows to assign a custom
-     * {@link Slope} to the tile at initialization.
-     * 
-     * @see Tile#slope
-     */
-    public Tile(Transform transform, Image image, Slope slope) {
-        this(transform, image);
-        this.slope = slope;
+        this.image = img;
+        this.tileset = tileset;
     }
     
     /**
@@ -192,40 +187,121 @@ public final class Tile {
      * Sets the tile's image to the specified image.
      * 
      * Note that the new image must match the dimensions of the old image.
-     * <b>Important</b>: Any updates to the image made via setImage() will not
-     * carry over if the tile's {@link SlopeType} or {@link Direction} is
-     * adjusted, and will have to be manually re-applied.
+     * <b>Important</b>: Updating the image directly is not recommended for
+     * adjusting a tile's slope.  Use setSlope() instead, or you may get
+     * unexpected results.
      * 
      * @see Tile#getImage();
      */
-    public void setImage(Image im) {
+    protected void setImage(Image im) {
         if (im.getWidth() != xDim || im.getHeight() != yDim) { return; }
         image = im;
     }
     
     /**
-     * Sets the {@link SlopeType} of the tile.
+     * Sets the {@link SlopeType} and {@link Direction} of the slope, and
+     * adjusts the tile's image as necessary.
      * 
      * The SlopeType defines what kind of tile deformations are applied, such as
-     * with hills, valleys, rivers, etc.
+     * with hills, valleys, rivers, etc., and the Direction defines <b>the
+     * orientation of the slope's downhill,</b> i.e. if a ball were placed on
+     * the imaginary slope, the {@code Direction} is the direction the ball
+     * would roll towards.
+     * <p>
+     * If the {@code SlopeType} has the word "DIAGONAL" or "MIDSEGMENT" in it,
+     * use screen-space directions UP, LEFT, DOWN, or RIGHT.  For any other
+     * {@code SlopeType}, use cardinal directions NORTH, SOUTH, EAST, or WEST.
      * 
      * @see Tile#getSlopeType();
+     * @return {@code true} upon success; {@code false} upon failure
+     *         (in particular, if the direction was invalid for the specified
+     *         slope type).
      */
-    public void setSlopeType(SlopeType type) {
+    public boolean setSlope(SlopeType type, Direction direction) {
+        switch (type) {
+            case STANDARD:
+                switch (direction) {
+                    case EAST:
+                        setImage(tileset.getImage(8));
+                    break;
+                    case NORTH:
+                        setImage(tileset.getImage(9));
+                    break;
+                    case WEST:
+                        setImage(tileset.getImage(10));
+                    break;
+                    case SOUTH:
+                        setImage(tileset.getImage(11));
+                    break;
+                    default:
+                        return false;
+                }
+            break;
+            case BOTTOM_DIAGONAL:
+                switch (direction) {
+                    case RIGHT:
+                        setImage(tileset.getImage(4));
+                    break;
+                    case UP:
+                        setImage(tileset.getImage(5));
+                    break;
+                    case LEFT:
+                        setImage(tileset.getImage(6));
+                    break;
+                    case DOWN:
+                        setImage(tileset.getImage(7));
+                    break;
+                    default:
+                        return false;
+                }
+            break;
+            case MIDSEGMENT:
+                switch (direction) {
+                    case UP:
+                        setImage(tileset.getImage(16));
+                    break;
+                    case RIGHT:
+                        setImage(tileset.getImage(17));
+                    break;
+                    case DOWN:
+                        setImage(tileset.getImage(18));
+                    break;
+                    case LEFT:
+                        setImage(tileset.getImage(19));
+                    break;
+                    default:
+                        return false;
+                }
+            break;
+            case TOP_DIAGONAL:
+                switch (direction) {
+                    case RIGHT:
+                        setImage(tileset.getImage(12));
+                    break;
+                    case UP:
+                        setImage(tileset.getImage(13));
+                    break;
+                    case LEFT:
+                        setImage(tileset.getImage(14));
+                    break;
+                    case DOWN:
+                        setImage(tileset.getImage(15));
+                    break;
+                    default:
+                        return false;
+                }
+            break;
+            case NONE:
+                slope.setSlopeType(type);
+                slope.setDirection(Direction.NORTH);
+                return true;
+            default:
+                return false;
+        }
+        
         slope.setSlopeType(type);
-    }
-    
-    
-    /**
-     * Sets the tile's {@link Direction} specified direction.
-     * 
-     * The Direction defines the orientation of the tile's deformations that are
-     * defined via the {@link SlopeType}.
-     * 
-     * @see Tile#getSlopeType();
-     */
-    public void setSlopeDirection(Direction direction) {
         slope.setDirection(direction);
+        return true;
     }
     
     /**

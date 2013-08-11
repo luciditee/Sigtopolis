@@ -177,13 +177,13 @@ public class Prop {
      * Used internally to ensure the dimensions of the prop are at least 1x1.
      */
     private void validateDimensions() {
-        if (width > 0) {
+        if (width < 0) {
             width = 1;
             Globals.logWarning("Prop set to invalid width, defaulted"
                     + " to a width of 1.");
         }
         
-        if (height > 0) {
+        if (height < 0) {
             height = 1;
             Globals.logWarning("Prop set to invalid height, defaulted"
                     + " to a height of 1.");
