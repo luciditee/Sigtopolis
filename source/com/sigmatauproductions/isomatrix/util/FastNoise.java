@@ -1,6 +1,7 @@
 package com.sigmatauproductions.isomatrix.util;
 
 import org.newdawn.slick.*;
+import java.util.Random;
 
 /*
  * This file is part of 3DzzD http://dzzd.net/.
@@ -166,9 +167,15 @@ public final class FastNoise {
         return result >>> (16 + nbOctave + 1);
     }
 
-    public static Image getNoiseImage(int x, int y, float factor, int oct) {
+    public static Image getNoiseImage(int x, int y, float factor, int oct,
+            boolean doInvert) {
         ImageBuffer buffer = new ImageBuffer(x, y);
-        if (factor == 0f) { return null; }
+        // The minimum is enforced because heightmaps generated using a number
+        // lower than the minimum tend to produce more artifacts.
+        // TODO: If necessary, create an override for this when generating noise
+        // that isn't going to be applied to a heightmap.
+        float factorMinimum = 30f;
+        factor = (factor >= factorMinimum) ? factor : factorMinimum;
         int minX = 16;
         int minY = 16;
         int finalX = (x > minX) ? x : minX;
@@ -177,6 +184,7 @@ public final class FastNoise {
         int maxY = finalY;
         int randX = minX + (int) (Math.random() * ((maxX - minX) + 1));
         int randY = minY + (int) (Math.random() * ((maxY - minY) + 1));
+        int randomRotation = new Random().nextInt(3);
         ImageBuffer noiseBuffer = new ImageBuffer(x, y);
         for (int i = 0; i < noiseBuffer.getWidth(); i++) {
             for (int j = 0; j < noiseBuffer.getHeight(); j++) {
@@ -184,7 +192,33 @@ public final class FastNoise {
                 noiseBuffer.setRGBA(i, j, col, col, col, 255);
             }
         }
-
-        return noiseBuffer.getImage().getScaledCopy(x, y);
+        
+        if (!new Random().nextBoolean()
+                && doInvert){noiseBuffer=invert(noiseBuffer,false);}
+        Image heightmap = noiseBuffer.getImage().getScaledCopy(x, y);
+        heightmap.rotate(90+(randomRotation*90));
+        
+        return heightmap;
+    }
+    
+    private static ImageBuffer invert(ImageBuffer im, boolean doAlpha) {
+        if (im == null) { return null; }
+        Image imageVersion = im.getImage();
+        ImageBuffer buffer = im;
+        for (int x = 0; x < im.getWidth(); x++) {
+            for (int y = 0; y < im.getHeight(); y++) {
+                int red = imageVersion.getColor(x, y).getRed();
+                int green = imageVersion.getColor(x, y).getGreen();
+                int blue = imageVersion.getColor(x, y).getBlue();
+                int alpha = imageVersion.getColor(x, y).getAlpha();
+                if (doAlpha) {
+                    buffer.setRGBA(x,y,255-red,255-green,255-blue,255-alpha);
+                } else {
+                    buffer.setRGBA(x, y, 255-red, 255-green, 255-blue, alpha);
+                }
+            }
+        }
+        
+        return buffer;
     }
 }

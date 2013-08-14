@@ -53,11 +53,11 @@ public final class TileMap {
     /**
      * The minimum X-size (width) of a TileMap.
      */
-    public final int MIN_X = 4;
+    public final int MIN_X = 16;
     /**
      * The minimum Y-size (height) of a TileMap.
      */
-    public final int MIN_Y = 4;
+    public final int MIN_Y = 16;
     /**
      * The maximum X-size (width) of a TileMap.
      */
@@ -136,7 +136,13 @@ public final class TileMap {
      * @param ySize
      * @throws SlickException
      */
-    public TileMap(Tileset tileset, int xSize, int ySize) throws SlickException {
+    public TileMap(Tileset tileset, int xSize, int ySize) throws SlickException{
+        // Validate the map size
+        int trueXSize = (xSize >= MIN_X) ? xSize : MIN_X;
+        trueXSize = (xSize <= MAX_X) ? xSize : MAX_X;
+        int trueYSize = (ySize >= MIN_Y) ? ySize : MIN_Y;
+        trueYSize = (ySize <= MAX_Y) ? ySize : MAX_Y;
+        
         this.tileset = tileset;
         this.xSize = xSize;
         this.ySize = ySize;
