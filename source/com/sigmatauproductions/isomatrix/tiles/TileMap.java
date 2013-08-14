@@ -34,6 +34,7 @@ import com.sigmatauproductions.isomatrix.util.Transform;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import org.newdawn.slick.*;
@@ -205,42 +206,62 @@ public final class TileMap {
     /**
      * Sets the image of the specified {@link Tile} to be of a specific tile
      * from the map's {@link Tileset}.
-     * 
+     *
      * <b>Warning!</b> It is not advisable to set the image of the tile manually
-     * when adjusting a tile's slope!  Use setTileSlope() instead.
+     * when adjusting a tile's slope! Use setTileSlope() instead.
      *
      * @param index
      * @param tilesetIndex
      */
     public void setTileImage(int index, int tilesetIndex) {
-        if (index > tiles.length || index < 0) { return; }
+        if (index > tiles.length || index < 0) {
+            return;
+        }
         tiles[index].setImage(tileset.getImage(tilesetIndex));
     }
-    
+
     /**
      * Sets the slope of the specified tile and updates its image accordingly.
-     * 
-     * @param index The index of the tile.  Will return without doing anything
-     *              in the event of an invalid index.
+     *
+     * @param index The index of the tile. Will return without doing anything in
+     * the event of an invalid index.
      * @param type The {@link SlopeType}.
      * @param direction The {@link Direction}.
      */
     public void setTileSlope(int index, SlopeType type, Direction direction) {
-        if (index > tiles.length || index < 0) { return; }
+        if (index > tiles.length || index < 0) {
+            return;
+        }
         tiles[index].setSlope(type, direction);
     }
-    
+
+    public SlopeType getTileSlopeType(int index) {
+        if (index > tiles.length || index < 0) {
+            return null;
+        }
+        return tiles[index].getSlopeType();
+    }
+
+    public Direction getTileSlopeDirection(int index) {
+        if (index > tiles.length || index < 0) {
+            return null;
+        }
+        return tiles[index].getSlopeDirection();
+    }
+
     /**
      * Sets the slope of the specified tile and updates its image accordingly.
-     * 
+     *
      * @param coords An array ({@code x = int[0], y = int[1]}) containing the
-     *                        tile coordinates.
+     * tile coordinates.
      * @param type The {@link SlopeType}.
      * @param direction The {@link Direction}.
      */
-    public void setTileSlope(int[] coords, SlopeType type, Direction direction){
+    public void setTileSlope(int[] coords, SlopeType type, Direction direction) {
         int index = getTileByCoordinates(coords[0], coords[1]);
-        if (index < 0) { return; }
+        if (index < 0) {
+            return;
+        }
         setTileSlope(index, type, direction);
     }
 
@@ -259,7 +280,9 @@ public final class TileMap {
      * @param height
      */
     public void setTileHeight(int index, int height) {
-        if (index > tiles.length || index < 0) { return; }
+        if (index > tiles.length || index < 0) {
+            return;
+        }
         tiles[index].position.z = -height * tileset.getHeightOffset();
     }
 
@@ -271,7 +294,7 @@ public final class TileMap {
      * @return The value of the tile's z-position.
      */
     public int getTileHeight(int index) {
-        return -tiles[index].position.z;
+        return -tiles[index].position.z / tileset.getHeightOffset();
     }
 
     /**
@@ -576,32 +599,32 @@ public final class TileMap {
     public void setShowTileID(boolean show) {
         showTileIDs = show;
     }
-    
+
     /**
-     * 
+     *
      * Randomizes the flat tiles (tiles with a {@link SlopeType} of
      * {@code NONE}) to give variation to the TileMap's appearance.
-     * 
-     * The parameters in this method must add up to 1.0 in sum, otherwise
-     * this method will not work--logical, given that the parameters are
-     * actually values of probability.
-     * 
+     *
+     * The parameters in this method must add up to 1.0 in sum, otherwise this
+     * method will not work--logical, given that the parameters are actually
+     * values of probability.
+     *
      * @param first The likelihood of the first tile, from 0.0 to 1.0.
      * @param second The likelihood of the second tile, from 0.0 to 1.0.
      * @param third The likelihood of the third tile, from 0.0 to 1.0.
      * @param fourth The likelihood of the fourth tile, from 0.0 to 1.0.
      * @return Returns true upon success, and false if the parameters do not
-     *         equal 1.0 in sum.
+     * equal 1.0 in sum.
      */
     public boolean randomizeFlats(double first, double second,
             double third, double fourth) {
         // First, make sure the arguments evaluate to 1.0 when added
-        double total = first+second+third+fourth;
-        
+        double total = first + second + third + fourth;
+
         if (total != 1.0) {
             return false;
         }
-        
+
         Random rand = new Random();
         for (int i = 0; i < tiles.length; i++) {
             // If the current tile is flat, randomize it.
@@ -613,7 +636,7 @@ public final class TileMap {
                 boolean scnd = rand.nextDouble() <= second;
                 boolean thrd = rand.nextDouble() <= third;
                 boolean frth = rand.nextDouble() <= fourth;
-                
+
                 if (scnd) {
                     tiles[i].setImage(tileset.getImage(1));
                 } else if (thrd) {
@@ -625,17 +648,492 @@ public final class TileMap {
                 }
             }
         }
+
+        return true;
+    }
+
+    /**
+     * Randomizes the flat tiles (tiles with a {@link SlopeType} of
+     * {@code NONE}) to give variation to the TileMap's appearance, using only
+     * the default values of 0.5, 0.3, 0.1, and 0.1 for the likelihoods
+     * respectively.
+     */
+    public boolean randomizeFlats() {
+        return randomizeFlats(0.5, 0.3, 0.1, 0.1);
+    }
+    
+    /**
+     * Loads an {@link Image} object as a heightmap and applies its height
+     * values to the TileMap.
+     * 
+     * The {@link Image} must be the same resolution as the TileMap, otherwise
+     * a warning will be logged, and the image will be clamped.
+     * <p>
+     * For loading heightmaps via filename, see the alias function below.
+     * 
+     * @param img The {@link Image} containing the heightmap.
+     * @param minHeight The lowest point (black on the image) of the output.
+     * @param maxHeight The highest point (white on the image) of the output.
+     * @return true upon success, false upon failure.
+     */
+    public boolean loadHeightmap(Image img, int minHeight, int maxHeight) {
+        // First, we ensure that the dimensions of the image are sane.
+        // Throw a warning in the event of a map too small, and auto-scale to
+        // the maximum if the map is too large.
+        Image originalImage = img;
+        if (originalImage.getWidth() < MIN_X
+                || originalImage.getHeight() < MIN_Y) {
+            Globals.logWarning("Attempted to load heightmap  from image "
+                    + " which is less than the minimum map size.");
+            return false;
+        } else if (originalImage.getWidth() > MAX_X
+                || originalImage.getHeight() > MAX_Y) {
+            Globals.logWarning("Attempted to load heightmap from image "
+                    + " which is greater than the maximum map size. "
+                    + "Automatically resizing to " + MAX_X + "x" + MAX_Y
+                    + "...");
+            originalImage = originalImage.getScaledCopy(MAX_X, MAX_Y);
+        }
+
+        // Now let's make sure the heightmap dimensions match the TileMap
+        // dimensions.
+        if (originalImage.getWidth() != xSize
+                || originalImage.getHeight() != ySize) {
+            Globals.logWarning("Attempted to load heightmap which is not"
+                    + " equal to the size of the TileMap.  Clamping...");
+            originalImage = originalImage.getScaledCopy(xSize, ySize);
+        }
+
+        canDraw = false;
+
+        // If we're here, the image is sane.  Let's make a new buffer to
+        // accept the color-averaging process.
+        ImageBuffer colorAverager = new ImageBuffer(
+                originalImage.getWidth(), originalImage.getHeight());
+        Image heightmap;
+
+        // Start iterating through the pixels of the original image and copy
+        // the color values into temporary variables to be averaged.
+        for (int x = 0; x < originalImage.getHeight(); x++) {
+            for (int y = 0; y < originalImage.getWidth(); y++) {
+                // Get the color of the current pixel.
+                Color originalColor = originalImage.getColor(x, y);
+
+                // Average the color of the current pixel.
+                int red = originalColor.getRed();
+                int green = originalColor.getGreen();
+                int blue = originalColor.getBlue();
+                int average = (red + green + blue) / 3;
+
+                // Set the color of the corresponding pixel in the 
+                colorAverager.setRGBA(x, y,
+                        average,
+                        average,
+                        average,
+                        average);
+            }
+        }
+
+        // The heightmap is now stored in its own image.
+        heightmap = colorAverager.getImage();
+
+        // Now let's iterate through the heightmap and set the height values
+        // accordingly (while clamping them between min and max).
+        for (int x = 0; x < heightmap.getWidth(); x++) {
+            for (int y = 0; y < heightmap.getHeight(); y++) {
+                // The equation is as follows:
+                // height = ((averageColor/255)*(maximum-minimum))+minimum
+                float clampedColor = (heightmap.getColor(x, y).getRed()
+                        / 255.0f);
+                setTileHeight(getTileByCoordinates(x, y),
+                        ((int) (clampedColor * (maxHeight - minHeight))
+                        + minHeight));
+            }
+        }
+
+        // For whatever reason, the above loop doesn't affect the last tile.
+        // TODO: Fix this.  Probably something wrong with
+        // getTileByCoordinates(), but I'm really not sure what just yet.
+        float tempClampedColor = (heightmap.getColor(xSize - 1, ySize - 1)
+                .getRed() / 255.0f);
+        setTileHeight(tiles.length - 1,
+                ((int) (tempClampedColor * (maxHeight - minHeight))
+                + minHeight));
+
+        // Now we fix the heights in case there are huge discrepencies that
+        // cannot be interpolated, and return from the function if the
+        // discrepencies are too great.
+        if (!checkHeights(10)) {
+            resetHeights();
+            return false;
+        }
+
+        // Finally, we fix any of the tiles that have two or more neighbors
+        // that equal a height value different than its own, and adjust it
+        // accordingly.  This prevents random, un-interpolatable "pits" 
+        // or "mounds" from appearing in the map.
+        fixOrphans();
+
+        // If we're here, the heightmap is good-to-go for slope
+        // interpolation.  Here goes nothing...
+        interpolateSlope();
+
+        // The slope has been interpolated.  The map is usable again.
+        canDraw = true;
         
+        // Return true to indicate success.
         return true;
     }
     
     /**
-     * Randomizes the flat tiles (tiles with a {@link SlopeType} of
-     * {@code NONE}) to give variation to the TileMap's appearance, using only
-     * the default values of 0.6, 0.2, 0.1, and 0.1 for the likelihoods
-     * respectively.
+     * Loads a heightmap by its filename.
+     * 
+     * Supported formats are BMP, JPG, and PNG.
+     * 
+     * @param filename
+     * @param minHeight The lowest point (black on the image) of the output.
+     * @param maxHeight The highest point (white on the image) of the output.
+     * @throws SlickException 
+     * @return true upon success, false upon failure.
      */
-    public boolean randomizeFlats() {
-        return randomizeFlats(0.6, 0.2, 0.1, 0.1);
+    public boolean loadHeightmap(String filename,
+            int minHeight, int maxHeight) throws SlickException {
+        return loadHeightmap(new Image(filename), minHeight, maxHeight);
+    }
+    
+    /**
+     * Resets the TileMap's height values to be zero across the board.
+     * 
+     * For completeness purposes, it is also notable that this method resets
+     * all slope values to SlopeType.{@code NONE} and Direction.{@code NORTH}.
+     */
+    public void resetHeights() {
+        resetHeights(0);
+    }
+    
+    /**
+     * Resets the TileMap's height values to be the specified value
+     * across the board.
+     * 
+     * For completeness purposes, it is also notable that this method resets
+     * all slope values to SlopeType.{@code NONE} and Direction.{@code NORTH}.
+     * 
+     * @param height 
+     */
+    public void resetHeights(int height) {
+        for (int i = 0; i < tiles.length; i++) {
+            setTileHeight(i, height);
+            setTileSlope(i, SlopeType.NONE, Direction.NORTH);
+        }
+    }
+    
+    /**
+     * Checks and fixes the height values of the map in case there are any
+     * height discrepancies too far apart to interpolate.
+     * 
+     * 
+     * @param maxAttempts The max number of times the method will check the
+     *                    heights.
+     * @return Returns true upon success.
+     */
+    private boolean checkHeights(int maxAttempts) {
+        boolean flag;
+        int attempts = 0;
+        do {
+            flag = false;
+            for (int i = 0; i < tiles.length; i++) {
+                if (checkNeighborsForDiscrepancy(i)) {
+                    setTileHeight(i, getTileHeight(i) - 1);
+                    flag = true;
+                }
+            }
+            attempts++;
+        } while (flag || attempts == maxAttempts);
+
+        return true;
+    }
+    
+    /**
+     * 
+     * Used by {@code checkHeights()} to check neighboring tiles for large
+     * height discrepancies.
+     * 
+     * @param index
+     * @return Returns true if a discrepancy is found, false if not.
+     */
+    private boolean checkNeighborsForDiscrepancy(int index) {
+        for (Direction dir : Direction.values()) {
+            int neighbor = getNeighbor(index, dir);
+            if (neighbor != -1) {
+                if (getTileHeight(neighbor) - getTileHeight(index) < -1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Repairs "orphaned" tiles; that is, tiles that--when imported via height
+     * map, have height values that can be interpolated but are surrounded so
+     * well with other height values that they can't be interpolated without
+     * potentially affecting large areas of the terrain.
+     */
+    private void fixOrphans() {
+        for (int i = 0; i < tiles.length; i++) {
+            if (isOrphaned(i) > 0) {
+                setTileHeight(i, getTileHeight(i) - 1);
+            } else if (isOrphaned(i) < 0) {
+                setTileHeight(i, getTileHeight(i) + 1);
+            }
+        }
+    }
+    
+    /**
+     * Checks if the specified tile is considered an orphan.
+     * 
+     * @param index
+     * @return Returns an integer whose sign indicates the direction in which
+     *         the tile's "orphanness" occurs.
+     */
+    private int isOrphaned(int index) {
+        int sign = 0;
+        for (Direction dir : Direction.values()) {
+            // We're disregarding corner neighbors because those can vary
+            // drastically.  The edge neighbors are the most important because
+            // each edge controls up to two corners of the tile at a time and
+            // therefore takes priority.
+            if (dir != Direction.UP || dir != Direction.LEFT
+                    || dir != Direction.DOWN || dir != Direction.RIGHT) {
+                if (getNeighbor(index, dir) != -1
+                        && getNeighbor(index, DirectionUtils.getInverse(dir))
+                        != -1) {
+                    // If we're here, the neighbor and its inverse are tiles
+                    // that exist.  Cache the heights.
+                    int neighborHeight = getTileHeight(getNeighbor(index, dir));
+                    int inverseHeight = getTileHeight(getNeighbor(index,
+                            DirectionUtils.getInverse(dir)));
+
+                    if (neighborHeight == inverseHeight) {
+                        if (getTileHeight(index) < neighborHeight) {
+                            sign = -1;
+                        } else if (getTileHeight(index) > neighborHeight) {
+                            sign = 1;
+                        }
+                    }
+
+                }
+            }
+        }
+
+        return sign;
+    }
+    
+    /**
+     * Used internally to determine the appropriate slope values for a terrain,
+     * given its height values, by means of "passes" (iterations) through the
+     * list of tiles.
+     */
+    private void interpolateSlope() {
+        boolean corner = false;
+        Direction slopeDirection = null;
+
+        // STANDARD pass
+        for (int i = 0; i < tiles.length; i++) {
+            for (Direction dir : Direction.values()) {
+                if (dir != Direction.UP && dir != Direction.LEFT
+                        && dir != Direction.DOWN && dir != Direction.RIGHT) {
+                    if (getNeighbor(i, dir) != -1) {
+                        if (!corner) {
+                            if (getTileHeight(getNeighbor(i, dir))
+                                    > getTileHeight(i)) {
+                                if (slopeDirection == null) {
+                                    setTileSlope(i, SlopeType.STANDARD,
+                                            DirectionUtils.getInverse(dir));
+                                    slopeDirection = dir;
+                                } else {
+                                    corner = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            corner = false;
+            slopeDirection = null;
+        }
+
+        List<Integer> bottomCorners = new ArrayList<>();
+
+        // BOTTOM_DIAGONAL pass
+        for (int i = 0; i < tiles.length; i++) {
+            // First, we determine if the tile in question is flat in terms
+            // of the slope
+            if (getTileSlopeType(i) == SlopeType.NONE) {
+                // If we're here, it's flat.  Iterate through the immediate
+                // surrounding tiles (except for diagonal immediates--those
+                // aren't a factor)
+                for (Direction dir : Direction.values()) {
+                    if (dir != Direction.UP && dir != Direction.LEFT
+                            && dir != Direction.DOWN && dir != Direction.RIGHT) {
+                        // This crazy conditional block identifies tiles that
+                        // have neighboring tiles of a STANDARD SlopeType,
+                        // where the neighboring tiles equal the slope of the
+                        // tile in question (tiles[i]).
+                        if (getTileSlopeType(getNeighbor(i, dir))
+                                == SlopeType.STANDARD
+                                && getTileSlopeType(getNeighbor(i,
+                                DirectionUtils.clockwise(dir, 2)))
+                                == SlopeType.STANDARD
+                                && getTileHeight(getNeighbor(i, dir))
+                                == getTileHeight(i)
+                                && getTileHeight(getNeighbor(i,
+                                DirectionUtils.clockwise(dir, 2)))
+                                == getTileHeight(i)) {
+                            // One more thing to check: if the neighboring tiles
+                            // used to validate this tile have exactly 270 deg.
+                            // of slope direction difference
+                            Direction neighbor1 = getTileSlopeDirection(
+                                    getNeighbor(i, dir));
+                            Direction neighbor2 = getTileSlopeDirection(
+                                    getNeighbor(i, DirectionUtils.clockwise(dir,
+                                    2)));
+                            int difference = DirectionUtils
+                                    .degreeDifferenceClockwise(neighbor1,
+                                    neighbor2);
+                            if (difference == 270) {
+                                setTileSlope(i, SlopeType.BOTTOM_DIAGONAL,
+                                        DirectionUtils.getInverse(
+                                        DirectionUtils.clockwise(dir)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // TOP_DIAGONAL pass
+        for (int i = 0; i < tiles.length; i++) {
+            // At this stage in the slope interpolation, tiles that -should- be
+            // TOP_DIAGONAL in slope are actually botched attempts at adding a
+            // STANDARD type of slope.  For this reason, we iterate through the
+            // list of current known STANDARD slope tiles.
+            if (getTileSlopeType(i) == SlopeType.STANDARD) {
+                //System.out.println(i + " is appropriate");
+                for (Direction dir : Direction.values()) {
+                    if (dir != Direction.UP && dir != Direction.LEFT
+                            && dir != Direction.DOWN
+                            && dir != Direction.RIGHT) {
+                        if (getNeighbor(i, dir) != -1 && getNeighbor(i,
+                                DirectionUtils.clockwise(dir, 2)) != -1) {
+                            int neighbor1 = getNeighbor(i, dir);
+                            int neighbor2 = getNeighbor(i, DirectionUtils
+                                    .clockwise(dir, 2));
+                            SlopeType neighbor1SlopeType =
+                                    getTileSlopeType(neighbor1);
+                            SlopeType neighbor2SlopeType =
+                                    getTileSlopeType(neighbor2);
+                            int height1 = getTileHeight(neighbor1);
+                            int height2 = getTileHeight(neighbor2);
+
+                            if ((neighbor1SlopeType == SlopeType.STANDARD
+                                    || neighbor1SlopeType == SlopeType.BOTTOM_DIAGONAL
+                                    || neighbor1SlopeType == SlopeType.NONE)
+                                    && (neighbor2SlopeType == SlopeType.STANDARD
+                                    || neighbor2SlopeType == SlopeType.BOTTOM_DIAGONAL
+                                    || neighbor2SlopeType == SlopeType.NONE)
+                                    && height1 > getTileHeight(i)
+                                    && height2 > getTileHeight(i)) {
+                                setTileSlope(i, SlopeType.TOP_DIAGONAL,
+                                        DirectionUtils.clockwise(
+                                        DirectionUtils.getInverse(dir)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // BOTTOM_DIAGONAL handling, second pass
+        // This pass occurs to patch issues with flat tiles that may be left
+        // flat after the first pass due to TOP_DIAGONAL interpolation as of
+        // then not happening.  Now that TOP_DIAGONAL interpolation has occurred
+        // it's possible to fix these holes, because they have been isolated by
+        // the previous passes.
+        for (int i = 0; i < tiles.length; i++) {
+            if (getTileSlopeType(i) == SlopeType.NONE) {
+                for (Direction dir : Direction.values()) {
+                    if (dir != Direction.UP && dir != Direction.LEFT
+                            && dir != Direction.DOWN
+                            && dir != Direction.RIGHT) {
+                        if (getNeighbor(i, dir) != -1 && getNeighbor(i,
+                                DirectionUtils.clockwise(dir, 2)) != -1) {
+                            // If we're here, we have narrowed the search down
+                            // to tiles that have valid cardinal neighbor pairs.
+                            // Let's check these pairs.
+                            int neighbor1 = getNeighbor(i, dir);
+                            int neighbor2 = getNeighbor(i, DirectionUtils
+                                    .clockwise(dir, 2));
+                            SlopeType neighbor1SlopeType =
+                                    getTileSlopeType(neighbor1);
+                            SlopeType neighbor2SlopeType =
+                                    getTileSlopeType(neighbor2);
+                            int height1 = getTileHeight(neighbor1);
+                            int height2 = getTileHeight(neighbor2);
+                            if (height1 == height2 && (neighbor1SlopeType
+                                    == SlopeType.STANDARD || neighbor1SlopeType
+                                    == SlopeType.TOP_DIAGONAL)
+                                    && (neighbor2SlopeType
+                                    == SlopeType.STANDARD || neighbor2SlopeType
+                                    == SlopeType.TOP_DIAGONAL)
+                                    && neighbor1SlopeType != neighbor2SlopeType
+                                    && height1 == getTileHeight(i)
+                                    && height2 == getTileHeight(i)) {
+                                setTileSlope(i, SlopeType.BOTTOM_DIAGONAL,
+                                        DirectionUtils.getInverse(
+                                        DirectionUtils.clockwise(dir)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // BOTTOM_DIAGONAL third and final pass
+        // Basically identical to the second pass except it accounts for
+        // extra little inconsistencies left behind by the TOP_DIAGONAL pass.
+        for (int i = 0; i < tiles.length; i++) {
+            if (getTileSlopeType(i) == SlopeType.NONE) {
+                for (Direction dir : Direction.values()) {
+                    if (dir != Direction.UP && dir != Direction.LEFT
+                            && dir != Direction.DOWN
+                            && dir != Direction.RIGHT) {
+                        if (getNeighbor(i, dir) != -1 && getNeighbor(i,
+                                DirectionUtils.clockwise(dir, 2)) != -1) {
+                            int neighbor1 = getNeighbor(i, dir);
+                            int neighbor2 = getNeighbor(i, DirectionUtils
+                                    .clockwise(dir, 2));
+                            SlopeType neighbor1SlopeType =
+                                    getTileSlopeType(neighbor1);
+                            SlopeType neighbor2SlopeType =
+                                    getTileSlopeType(neighbor2);
+                            int height1 = getTileHeight(neighbor1);
+                            int height2 = getTileHeight(neighbor2);
+                            if (height1 == height2
+                                    && height1 == getTileHeight(i)
+                                    && height2 == getTileHeight(i)
+                                    && neighbor1SlopeType
+                                    == SlopeType.TOP_DIAGONAL
+                                    && neighbor1SlopeType
+                                    == neighbor2SlopeType) {
+                                setTileSlope(i, SlopeType.BOTTOM_DIAGONAL,
+                                        DirectionUtils.getInverse(
+                                        DirectionUtils.clockwise(dir)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

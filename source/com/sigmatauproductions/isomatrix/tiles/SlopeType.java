@@ -47,5 +47,7 @@ package com.sigmatauproductions.isomatrix.tiles;
  * @author sigtau
  */
 public enum SlopeType {
+    // DO NOT CHANGE THE ORDER OF THESE VALUES.
+    // DOING SO CAN AND WILL RUIN THE WAY HEIGHTMAPS ARE READ.
     NONE, STANDARD, BOTTOM_DIAGONAL, MIDSEGMENT, TOP_DIAGONAL
 }

@@ -50,5 +50,7 @@ package com.sigmatauproductions.isomatrix.tiles;
  * @author sigtau
  */
 public enum Direction {
-        NORTH, EAST, SOUTH, WEST, UP, RIGHT, DOWN, LEFT
+    // DO NOT CHANGE THE ORDER OF THESE VALUES.
+    // DOING SO CAN AND WILL RUIN THE WAY HEIGHTMAPS ARE READ.
+    NORTH, EAST, SOUTH, WEST, UP, RIGHT, DOWN, LEFT
 }

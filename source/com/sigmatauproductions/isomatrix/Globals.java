@@ -42,7 +42,7 @@ public final class Globals {
     /**
      * The version string of this build of Isomatrix.
      */
-    public static final String ISOMATRIX_VERSION = "Isomatrix v0.2";
+    public static final String ISOMATRIX_VERSION = "Isomatrix v0.3";
     
     /**
      * Used for whether or not the current build is a debug build.

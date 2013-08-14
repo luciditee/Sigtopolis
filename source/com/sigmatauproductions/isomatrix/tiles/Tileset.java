@@ -66,7 +66,7 @@ public final class Tileset {
     /**
      * The array that stores the actual tile images.
      */
-    private Image[] tiles = new Image[13]; 
+    private Image[] tiles = new Image[20]; 
     
     /**
      * The actual pixel offset for simulating height with this tileset.
