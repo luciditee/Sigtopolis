@@ -34,7 +34,6 @@ import com.sigmatauproductions.isomatrix.util.Transform;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import org.newdawn.slick.*;
@@ -62,11 +61,11 @@ public final class TileMap {
     /**
      * The maximum X-size (width) of a TileMap.
      */
-    public final int MAX_X = 8192;
+    public final int MAX_X = 4096;
     /**
      * The maximum Y-size (height) of a TileMap.
      */
-    public final int MAX_Y = 8192;
+    public final int MAX_Y = 4096;
     /**
      * The offset used when drawing the TileMap.
      *
@@ -369,10 +368,24 @@ public final class TileMap {
      * @return Returns true if {@code canDraw} is set to true, false otherwise.
      * @throws SlickException
      */
-    public boolean draw(Graphics g) throws SlickException {
+    public boolean draw(Graphics g, int gameWidth, int gameHeight, float scaleX,
+            float scaleY) throws SlickException {
         if (canDraw) {
+            int maxX = gameWidth * ((int) (1f / scaleX));
+            int maxY = gameHeight * ((int) (1f / scaleY));
             for (int i = 0; i < tiles.length; i++) {
-                tiles[i].draw(offset);
+                int xPos = tiles[i].getDrawPosition(offset).x;
+                int yPos = tiles[i].getDrawPosition(offset).y;
+                
+                // Cull out tiles that are outside of the view frustum
+                if ((xPos + tiles[i].getWidth()) < 0
+                        || xPos > maxX
+                        || (yPos + tiles[i].getHeight()) < 0
+                        || yPos > maxY) {
+                    // Do nothing
+                } else {
+                    tiles[i].draw(offset);
+                }
             }
 
             if (drawProps) {
@@ -388,8 +401,19 @@ public final class TileMap {
                         prop.position.x = prop.position.x
                                 - (tileset.getTileWidth() / 2);
                     }
-
-                    prop.draw();
+                    
+                    int xPos = prop.position.x;
+                    int yPos = prop.position.y;
+                    
+                    // Cull out props that are outside of the view frustum
+                    if ((xPos + prop.getAnimationWidth()) < 0
+                            || xPos > maxX
+                            || (yPos + prop.getAnimationHeight()) < 0
+                            || yPos > maxY) {
+                        // Do nothing
+                    } else {
+                        prop.draw();
+                    }
                 }
             }
 
@@ -661,16 +685,15 @@ public final class TileMap {
     public boolean randomizeFlats() {
         return randomizeFlats(0.5, 0.3, 0.1, 0.1);
     }
-    
+
     /**
      * Loads an {@link Image} object as a heightmap and applies its height
      * values to the TileMap.
-     * 
-     * The {@link Image} must be the same resolution as the TileMap, otherwise
-     * a warning will be logged, and the image will be clamped.
-     * <p>
-     * For loading heightmaps via filename, see the alias function below.
-     * 
+     *
+     * The {@link Image} must be the same resolution as the TileMap, otherwise a
+     * warning will be logged, and the image will be clamped. <p> For loading
+     * heightmaps via filename, see the alias function below.
+     *
      * @param img The {@link Image} containing the heightmap.
      * @param minHeight The lowest point (black on the image) of the output.
      * @param maxHeight The highest point (white on the image) of the output.
@@ -780,45 +803,45 @@ public final class TileMap {
 
         // The slope has been interpolated.  The map is usable again.
         canDraw = true;
-        
+
         // Return true to indicate success.
         return true;
     }
-    
+
     /**
      * Loads a heightmap by its filename.
-     * 
+     *
      * Supported formats are BMP, JPG, and PNG.
-     * 
+     *
      * @param filename
      * @param minHeight The lowest point (black on the image) of the output.
      * @param maxHeight The highest point (white on the image) of the output.
-     * @throws SlickException 
+     * @throws SlickException
      * @return true upon success, false upon failure.
      */
     public boolean loadHeightmap(String filename,
             int minHeight, int maxHeight) throws SlickException {
         return loadHeightmap(new Image(filename), minHeight, maxHeight);
     }
-    
+
     /**
      * Resets the TileMap's height values to be zero across the board.
-     * 
-     * For completeness purposes, it is also notable that this method resets
-     * all slope values to SlopeType.{@code NONE} and Direction.{@code NORTH}.
+     *
+     * For completeness purposes, it is also notable that this method resets all
+     * slope values to SlopeType.{@code NONE} and Direction.{@code NORTH}.
      */
     public void resetHeights() {
         resetHeights(0);
     }
-    
+
     /**
-     * Resets the TileMap's height values to be the specified value
-     * across the board.
-     * 
-     * For completeness purposes, it is also notable that this method resets
-     * all slope values to SlopeType.{@code NONE} and Direction.{@code NORTH}.
-     * 
-     * @param height 
+     * Resets the TileMap's height values to be the specified value across the
+     * board.
+     *
+     * For completeness purposes, it is also notable that this method resets all
+     * slope values to SlopeType.{@code NONE} and Direction.{@code NORTH}.
+     *
+     * @param height
      */
     public void resetHeights(int height) {
         for (int i = 0; i < tiles.length; i++) {
@@ -826,14 +849,14 @@ public final class TileMap {
             setTileSlope(i, SlopeType.NONE, Direction.NORTH);
         }
     }
-    
+
     /**
      * Checks and fixes the height values of the map in case there are any
      * height discrepancies too far apart to interpolate.
-     * 
-     * 
+     *
+     *
      * @param maxAttempts The max number of times the method will check the
-     *                    heights.
+     * heights.
      * @return Returns true upon success.
      */
     private boolean checkHeights(int maxAttempts) {
@@ -852,12 +875,12 @@ public final class TileMap {
 
         return true;
     }
-    
+
     /**
-     * 
+     *
      * Used by {@code checkHeights()} to check neighboring tiles for large
      * height discrepancies.
-     * 
+     *
      * @param index
      * @return Returns true if a discrepancy is found, false if not.
      */
@@ -872,7 +895,7 @@ public final class TileMap {
         }
         return false;
     }
-    
+
     /**
      * Repairs "orphaned" tiles; that is, tiles that--when imported via height
      * map, have height values that can be interpolated but are surrounded so
@@ -888,13 +911,13 @@ public final class TileMap {
             }
         }
     }
-    
+
     /**
      * Checks if the specified tile is considered an orphan.
-     * 
+     *
      * @param index
      * @return Returns an integer whose sign indicates the direction in which
-     *         the tile's "orphanness" occurs.
+     * the tile's "orphanness" occurs.
      */
     private int isOrphaned(int index) {
         int sign = 0;
@@ -928,7 +951,7 @@ public final class TileMap {
 
         return sign;
     }
-    
+
     /**
      * Used internally to determine the appropriate slope values for a terrain,
      * given its height values, by means of "passes" (iterations) through the
