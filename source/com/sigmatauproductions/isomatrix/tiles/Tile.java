@@ -44,7 +44,7 @@ import org.newdawn.slick.*;
  *
  * @author sigtau
  */
-final class Tile {
+public final class Tile {
     
     /**
      * This defines the x-size of a tile itself, which can also be derived from

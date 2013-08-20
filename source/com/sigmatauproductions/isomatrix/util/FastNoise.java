@@ -174,7 +174,7 @@ public final class FastNoise {
         // lower than the minimum tend to produce more artifacts.
         // TODO: If necessary, create an override for this when generating noise
         // that isn't going to be applied to a heightmap.
-        float factorMinimum = 30f;
+        float factorMinimum = 15f;
         factor = (factor >= factorMinimum) ? factor : factorMinimum;
         int minX = 16;
         int minY = 16;

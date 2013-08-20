@@ -29,13 +29,10 @@
 
 package com.sigmatauproductions.isomatrix.tiles;
 
-import org.newdawn.slick.*;
 import com.sigmatauproductions.isomatrix.*;
 import com.sigmatauproductions.isomatrix.util.ConfigFile;
-import java.util.Scanner;
-import java.io.File;
-import java.io.IOException;
 import java.io.FileNotFoundException;
+import org.newdawn.slick.*;
 
 /**
  * Contains an array of images and their various properties, used to specify the
@@ -122,7 +119,7 @@ public final class Tileset {
      * @param heightOffset
      * @throws SlickException 
      */
-    public Tileset(String directory, int heightOffset) throws SlickException {
+    public Tileset(String directory) throws SlickException {
         int max = tiles.length;
         for (int i = 0; i < max; i++) {
             tiles[i] = new Image(Globals.TILESET_DIR 
@@ -193,25 +190,30 @@ public final class Tileset {
      */
     private void readConfig(String directory) {
         int pO;
+        int hO;
         String n = "";
         
         try {
             config = new ConfigFile(directory + "/tileset.cfg");
             n = config.getValueByProperty("name");
             pO = Integer.parseInt(config.getValueByProperty("propoffset"));
+            hO = Integer.parseInt(config.getValueByProperty("heightoffset"));
         } catch (FileNotFoundException e) {
             Globals.logWarning("tileset.cfg not found in " + directory +  "/ -"
                     + " assuming default config values");
             n = "Invalid";
             pO = 8;
+            hO = 8;
         } catch (NumberFormatException e) {
             Globals.logWarning("tileset.cfg in tileset directory \""
                     + directory + "\" does not contain proper "
                     + "offset values.  Assuming default offsets.");
             pO = 8;
+            hO = 8;
         }
         
         this.name = n;
         this.propOffset = pO;
+        this.heightOffset = hO;
     }
 }

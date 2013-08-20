@@ -806,6 +806,17 @@ public final class TileMap {
         // If we're here, the heightmap is good-to-go for slope
         // interpolation.  Here goes nothing...
         interpolateSlope();
+        
+        // Tile 0 Interpolation Fix -- Sometimes the first tile in the list
+        // gets an incorrect slope for unknown reasons.  This fixes the issue.
+        int neighboringTileSouth = getNeighbor(0, Direction.SOUTH);
+        if (getTileHeight(0) == getTileHeight(neighboringTileSouth)
+                && getTileSlopeType(neighboringTileSouth) ==
+                SlopeType.TOP_DIAGONAL) {
+            setTileSlope(0, SlopeType.STANDARD,
+                    DirectionUtils
+                    .clockwise(getTileSlopeDirection(neighboringTileSouth)));
+        }
 
         // The slope has been interpolated.  The map is usable again.
         canDraw = true;
@@ -1164,5 +1175,9 @@ public final class TileMap {
                 }
             }
         }
+    }
+    
+    public int getTileCount() {
+        return tiles.length;
     }
 }

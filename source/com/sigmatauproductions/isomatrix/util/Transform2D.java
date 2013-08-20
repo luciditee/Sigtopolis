@@ -30,13 +30,13 @@
 package com.sigmatauproductions.isomatrix.util;
 
 /**
- * Stores a three-dimensional coordinate value.                           
+ * Stores a two-dimensional coordinate value.                           
  *
- * Used to store coordinate values for objects in 3D or pseudo-3D space.
+ * Used to store coordinate values for objects in 2D space.
  *
  * @author sigtau
  */
-public final class Transform {
+public final class Transform2D {
     
     /**
      * Stores the x coordinate value of the transform.
@@ -48,18 +48,13 @@ public final class Transform {
      */
     public int y;
     
-    /**
-     * Stores the z coordinate value of the transform.
-     */
-    public int z;
     
     /**
      * Initializes a new transform at the origin.
      */
-    public Transform() {
+    public Transform2D() {
         x = 0;
         y = 0;
-        z = 0;
     }
     
     /**
@@ -70,28 +65,35 @@ public final class Transform {
      * @param y
      * @param z 
      */
-    public Transform(int x, int y, int z) {
+    public Transform2D(int x, int y) {
         this.x = x;
         this.y = y;
-        this.z = z;
     }
     
     /**
-     * Returns a new Transform at the origin in 3D space.
+     * Returns a new Transform2D at the origin in 2D space.
      * 
-     * @return Returns a Transform at the coordinates {@code (0,0,0)}.
+     * @return Returns a Transform2D at the coordinates {@code (0,0)}.
      */
-    public static Transform getOrigin() {
-        return new Transform(0, 0, 0);
+    public static Transform2D getOrigin() {
+        return new Transform2D(0, 0);
     }
     
     /**
-     * Returns an integer array containing the x, y, and z values of the
-     * transform in that order.
+     * Returns a new {@link Transform} object containing the x and y values of
+     * this {@code Transform2D} object, with a z-value of 0.
+     */
+    public Transform toTransform() {
+        return new Transform(x, y, 0);
+    }
+    
+    /**
+     * Returns an integer array containing the x and y values of the transform
+     * in that order.
      * @return 
      */
     public int[] toArray() {
-        int[] array = {x, y, z};
+        int[] array = {x, y};
         return array;
     }
     
@@ -102,8 +104,8 @@ public final class Transform {
     @Override public String toString() {
         StringBuilder result = new StringBuilder();
 
-        result.append("Transform { ");
-        result.append("(x, y, z) = (" + x + ", " + y + ", " + z + ")");
+        result.append("Transform2D { ");
+        result.append("(x, y) = (" + x + ", " + y + ")");
         result.append(" }");
 
         return result.toString();

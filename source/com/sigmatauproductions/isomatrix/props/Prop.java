@@ -30,7 +30,11 @@
 package com.sigmatauproductions.isomatrix.props;
 
 import com.sigmatauproductions.isomatrix.Globals;
+import com.sigmatauproductions.isomatrix.tiles.TileMap;
 import com.sigmatauproductions.isomatrix.util.Transform;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import org.newdawn.slick.*;
 
 /**
@@ -64,7 +68,7 @@ import org.newdawn.slick.*;
  * 
  * @author Will
  */
-public class Prop {
+public class Prop implements Cloneable {
     
     /**
      * Stores the default duration (in ms) of a frame in prop animations.
@@ -205,6 +209,10 @@ public class Prop {
         return anchor;
     }
     
+    public final void setAnchor(int a) {
+        anchor = a;
+    }
+    
     /**
      * Returns the image-height of this prop.
      */
@@ -238,5 +246,77 @@ public class Prop {
      */
     public final boolean needsRegistration() {
         return doRegister;
+    }
+    
+    @Override
+    public final Prop clone() throws CloneNotSupportedException {
+        return ((Prop)(super.clone()));
+    }
+    
+    public static boolean createCluster(TileMap map, Prop[] props,
+            int[] freq, int center, int _radius) {
+        // First, validate that everything is non-null and good to use.
+        // Return false if not.
+        if (map == null || props == null || freq == null) { return false; }
+        if (center < 0 || center >= map.getTileCount()) { return false; }
+        if (props.length != freq.length) { return false; }
+        if (map.getTile(center).isRegistered()) { return false; }
+        int radius = (_radius > 1) ? _radius : 2;
+        int[] frequencies = freq;
+        
+        // Initialize a list to hold all of the tiles we will be drawing to.
+        List<Integer> tiles = new ArrayList<>();
+        
+        // Get all the tiles within a distance equal to the radius.
+        for (int i = 0; i < map.getTileCount(); i++) {
+            if (map.distance(center, i) <= radius) { tiles.add(i); }
+        }
+        
+        // Get a random number generator instance
+        Random random = new Random();
+        
+        // Start the prop population cycle
+        boolean flag = false;
+        for (;;) {
+            // First we make sure we aren't finished yet.  To do this,
+            // we check the frequency array.
+            for (int i = 0; i < frequencies.length; i++) {
+                if (frequencies[i] != 0) { flag = true; }
+            }
+            if (!flag || tiles.isEmpty()) { break; }
+            
+            // Determine which prop to put and on which tile
+            int whichProp;
+            int whichTile;
+            do {
+                whichProp = random.nextInt(props.length);
+                whichTile = random.nextInt(tiles.size());
+            } while (frequencies[whichProp] != 0);
+                
+            try {
+                // Clone the prop and give it an anchor
+                Prop instance = props[whichProp].clone();
+                instance.setAnchor(whichTile);
+                
+                // Add it to the map
+                map.addProp(instance);
+                
+                // Clean up by decreasing the frequency of the prop by one,
+                // and remove the tile we've added a prop to from the list
+                frequencies[whichProp]--;
+                for (int i = 0; i < tiles.size(); i++) {
+                    if (tiles.get(i) == whichTile) {
+                        tiles.remove(i);
+                    }
+                }
+            } catch (CloneNotSupportedException e) {
+                Globals.logError("CloneNotSupportedException in"
+                        + " PropCluster.create()", false);
+                return false;
+            }
+        }
+        
+        // Return true, the cluster is complete.
+        return true;
     }
 }

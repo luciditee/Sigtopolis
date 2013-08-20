@@ -115,6 +115,12 @@ public final class Globals {
     public static final String PROP_DIR = RESOURCE_DIR+"props/";
     
     /**
+     * A string naming the GUI image directory for Isomatrix, relative to the
+     * classpath.
+     */
+    public static final String GUI_DIR = RESOURCE_DIR+"gui/";
+    
+    /**
      * Logs the specified warning to the debug log.
      */
     public static void logWarning(String warning) {

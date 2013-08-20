@@ -29,8 +29,7 @@
 
 package com.sigmatauproductions.isomatrix.demo;
 
-import com.sigmatauproductions.isomatrix.Globals;
-import com.sigmatauproductions.isomatrix.props.*;
+import com.sigmatauproductions.isomatrix.event.*;
 import com.sigmatauproductions.isomatrix.tiles.*;
 import com.sigmatauproductions.isomatrix.util.*;
 import java.util.Random;
@@ -49,12 +48,8 @@ public class IsomatrixDemo extends BasicGame {
     private Tileset set;
     private TileMap map;
     
-    private ImageBuffer buffer;
-    
-    Prop prop;
-    Prop prop2;
-    Prop wideProp;
     Image heightmap;
+    Input input;
     
     public IsomatrixDemo (String title, int width,
         int height, boolean fullscreen) throws SlickException {
@@ -67,49 +62,29 @@ public class IsomatrixDemo extends BasicGame {
 
     @Override
     public void init(GameContainer gc) throws SlickException {
-        set = new Tileset("default", 8);
-        map = new TileMap(set, 16, 16);
-        map.offset.x = 368;
+        set = new Tileset("temperate");
+        map = new TileMap(set, 128, 128);
+        map.offset.x = 924;
         map.offset.y = 64;
         
-        float randomFactor = (new Random().nextFloat()*100)-50f;
-        System.out.println(randomFactor);
-        heightmap = FastNoise.getNoiseImage(16, 16, randomFactor, 8, true);
+        float randomFactor = (new Random().nextFloat()*100f);
+        heightmap = FastNoise.getNoiseImage(128, 128, randomFactor, 8, true);
         
         map.loadHeightmap(heightmap, 0, 9);
+        map.randomizeFlats();
         
-        Image[] propTest = { 
-        new Image(Globals.PROP_DIR + "default/BlockStackRed.png"),
-        //new Image(Globals.PROP_DIR + "default/SmallBlockGreen.png")
-        };
-        
-        Image[] widePropImages = {
-            new Image(Globals.PROP_DIR + "default/BlockMass.png")
-        };
-        
-        
-        //prop = new Prop(propTest, new int[] {1000}, 1, 1, 27);
-        
-        //prop2 = new Prop(propTest, new int[] {1000}, 1,
-                //1, 28);
-        
-        //wideProp = new Prop(widePropImages, new int[] {1000}, 2, 2, 33);
-        
-        //map.addProp(prop);
-        //map.addProp(prop2);
-        //map.addProp(wideProp);
-        //map.setShowTileID(true);
+        input = gc.getInput();
     }
 
     @Override
     public void update(GameContainer gc, int delta) throws SlickException {
-        
+        EventHandler.update(delta);
     }
 
     @Override
     public void render(GameContainer gc, Graphics g) throws SlickException {
-        float scaleX = 1f;
-        float scaleY = 1f;
+        float scaleX = 0.33f;
+        float scaleY = 0.33f;
         g.scale(scaleX, scaleY);
         map.draw(g, gc.getWidth(), gc.getHeight(), scaleX, scaleY);
         heightmap.draw(30,30);
