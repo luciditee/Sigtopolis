@@ -98,6 +98,9 @@ public final class TileMap {
      * @see TileMap#getTile()
      */
     private Tile[] tiles;
+    
+    private int mouseOverIndex = -1;
+    
     /**
      * Used internally to determine whether or not the TileMap is ready to be
      * drawn to the screen using draw().
@@ -185,7 +188,40 @@ public final class TileMap {
         canDraw = true;
         drawProps = true;
     }
-
+    
+    /**
+     * To be called once per frame, this method returns the current tile index
+     * that the mouse cursor is over, given the scale (zoom level) of the game.
+     * @param input
+     * @param scale 
+     */
+    public final void update(Input input, float scale) {
+        for (int i = 0; i < tiles.length; i++) {
+            if (tiles[i].isMouseOver(input, offset, scale)) {
+                mouseOverIndex = i;
+            }
+        }
+    }
+    
+    /**
+     * Returns the tile that the mouse was last detected to be over, or -1 if
+     * one has not yet been detected.
+     * @return 
+     */
+    public int getMouseOverIndex() {
+        return mouseOverIndex;
+    }
+    
+    /**
+     * Sets the color value of the tile's image.
+     * @param index
+     * @param color 
+     */
+    public void setTileColor(int index, Color color) {
+        if (index < 0 || index >= tiles.length) { return; }
+        tiles[index].setColor(color);
+    }
+    
     /**
      *
      * Returns the {@link Tileset} used by this map.
@@ -377,8 +413,10 @@ public final class TileMap {
     public boolean draw(Graphics g, int gameWidth, int gameHeight, float scaleX,
             float scaleY) throws SlickException {
         if (canDraw) {
-            int maxX = gameWidth * ((int) (1f / scaleX));
-            int maxY = gameHeight * ((int) (1f / scaleY));
+            int maxX = (int)((float)gameWidth*scaleX) + (gameWidth *
+                    ((int) (1f / scaleX))) + getTile(0).getWidth()*3;
+            int maxY = (int)((float)gameHeight*scaleY) +  (gameHeight *
+                    ((int) (1f / scaleY))) + getTile(0).getHeight()*3;
             for (int i = 0; i < tiles.length; i++) {
                 int xPos = tiles[i].getDrawPosition(offset).x;
                 int yPos = tiles[i].getDrawPosition(offset).y;
@@ -396,6 +434,7 @@ public final class TileMap {
 
             if (drawProps) {
                 for (Prop prop : props) {
+                    //System.out.println("Iterating prop");
                     prop.position = getTile(prop.getAnchor())
                             .getDrawPosition(offset);
 
@@ -418,6 +457,7 @@ public final class TileMap {
                             || yPos > maxY) {
                         // Do nothing
                     } else {
+                        //System.out.println("Drawing prop");
                         prop.draw();
                     }
                 }
@@ -622,7 +662,24 @@ public final class TileMap {
         // to an integer to prevent loss of precision.
         return ((int) Math.sqrt(operand1 + operand2));
     }
-
+    
+    public int gotoTile(int startingIndex, Direction dir, int steps) {
+        if (startingIndex < 0 || steps <= 0) { return -1; }
+        
+        int index = startingIndex;
+        int remainingSteps = steps;
+        while (remainingSteps > 0) {
+            index = getNeighbor(index, dir);
+            if (index < 0) {
+                return -1;
+            } else {
+                remainingSteps--;
+            }
+        }
+        
+        return index;
+    }
+    
     /**
      * Toggles tile ID labels on and off (used for debug).
      */
@@ -1177,6 +1234,10 @@ public final class TileMap {
         }
     }
     
+    /**
+     * Returns the number of tiles contained in this map.
+     * @return 
+     */
     public int getTileCount() {
         return tiles.length;
     }

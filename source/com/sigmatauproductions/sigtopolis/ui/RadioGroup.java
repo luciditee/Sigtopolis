@@ -26,60 +26,58 @@
  * of the authors and should not be interpreted as representing official policies, 
  * either expressed or implied, of the FreeBSD Project.
  */
-package com.sigmatauproductions.isomatrix.event;
+package com.sigmatauproductions.sigtopolis.ui;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A static class designed to track and execute an arbitrary number of
- * {@link Event} objects.  In order for the EventHandler to work properly, one
- * must place the following method call in the game's main update loop:
- * <br />
- * <pre>{@code EventHandler.update(delta);}</pre>
- * 
- * where {@code delta} equals the number of milliseconds that have elapsed since
- * the last frame, also known as the <i>delta-time</i> variable.
- * 
+ * A simple class for grouping together {@link PaneRadioButton} objects, which
+ * are normally useless on their own.
  * @author Will
  */
-public final class EventHandler {
+public class RadioGroup {
     /**
-     * Tracks the actual {@link Event} objects.
+     * The list of radio buttons.
      */
-    private static List<Event> events = new ArrayList<>();
+    private List<PaneRadioButton> radios = new ArrayList<>();
     
     /**
-     * Adds the specified event to the event queue.
-     * @param e 
+     * The currently selected radio button.
      */
-    public static void addEvent(Event e) {
-        if (e != null) { events.add(e); }
+    private int selected = Integer.MAX_VALUE;
+    
+    /**
+     * Adds a button to the group.
+     * @param b 
+     */
+    public void add(PaneRadioButton b) {
+        if (b != null) {
+            radios.add(b);
+            b.setGroup(this);
+        }
     }
     
     /**
-     * Intended to be called every frame and provided the delta-time, this
-     * method iterates through and executes events whose time has elapsed.
-     * @param delta 
+     * Adds a group of buttons to the group.
+     * @param b 
      */
-    public static void update(int delta) {
-        for(int i=0; i<events.size(); i++){
-            events.get(i).addToLifetime(delta);
-            if (events.get(i).getLifetime() > events.get(i).getDelay()) {
-                events.get(i).execute();
-                if (events.get(i).isRecurring()) {
-                    if (events.get(i).getRecurrences() < 0) {
-                        events.get(i).resetLifetime();
-                    } else if (events.get(i).getRecurrences() > 0) {
-                        events.get(i).decrement();
-                        events.get(i).resetLifetime();
-                    }
-                    if (events.get(i).getRecurrences() == 0) {
-                        events.remove(i);
-                    }
-                } else {
-                    events.remove(i);
-                }
+    public void add(PaneRadioButton[] b) {
+        for (PaneRadioButton button : b) {
+            this.add(button);
+        }
+    }
+    
+    /**
+     * Sets the currently selected button to the specified button ID.
+     * @param id 
+     */
+    protected void setSelected(int id) {
+        for (PaneRadioButton button : radios) {
+            if (button.getID() == id) {
+                selected = id;
+            } else {
+                button.checked = false;
             }
         }
     }

@@ -30,6 +30,7 @@
 package com.sigmatauproductions.isomatrix.props;
 
 import com.sigmatauproductions.isomatrix.Globals;
+import com.sigmatauproductions.isomatrix.tiles.Direction;
 import com.sigmatauproductions.isomatrix.tiles.TileMap;
 import com.sigmatauproductions.isomatrix.util.Transform;
 import java.util.ArrayList;
@@ -248,28 +249,51 @@ public class Prop implements Cloneable {
         return doRegister;
     }
     
+    /**
+     * Returns a copy of this prop.
+     * @return
+     * @throws CloneNotSupportedException 
+     */
     @Override
     public final Prop clone() throws CloneNotSupportedException {
         return ((Prop)(super.clone()));
     }
     
+    /**
+     * Creates a cluster of the specified props, given a specified frequency
+     * (number of occurrences), at a given center and radius.
+     * @param map
+     * @param props
+     * @param freq
+     * @param center
+     * @param _radius
+     * @return 
+     */
     public static boolean createCluster(TileMap map, Prop[] props,
-            int[] freq, int center, int _radius) {
+            int freq, int center, int _radius) {
         // First, validate that everything is non-null and good to use.
         // Return false if not.
-        if (map == null || props == null || freq == null) { return false; }
+        if (map == null || props == null) { return false; }
         if (center < 0 || center >= map.getTileCount()) { return false; }
-        if (props.length != freq.length) { return false; }
         if (map.getTile(center).isRegistered()) { return false; }
         int radius = (_radius > 1) ? _radius : 2;
-        int[] frequencies = freq;
+        int frequency = freq;
         
         // Initialize a list to hold all of the tiles we will be drawing to.
         List<Integer> tiles = new ArrayList<>();
         
         // Get all the tiles within a distance equal to the radius.
-        for (int i = 0; i < map.getTileCount(); i++) {
-            if (map.distance(center, i) <= radius) { tiles.add(i); }
+        int startingPoint = map.gotoTile(center, Direction.UP, radius);
+        if (startingPoint < 0) { return false; }
+        int currentPoint;
+        int rowStart = startingPoint;
+        for (int y = 0; y < radius; y++) {
+            currentPoint = rowStart;
+            for (int x = 0; x < radius; x++) {
+                tiles.add(currentPoint);
+                currentPoint++;
+            }
+            rowStart = map.getNeighbor(rowStart, Direction.SOUTH);
         }
         
         // Get a random number generator instance
@@ -277,43 +301,21 @@ public class Prop implements Cloneable {
         
         // Start the prop population cycle
         boolean flag = false;
-        for (;;) {
-            // First we make sure we aren't finished yet.  To do this,
-            // we check the frequency array.
-            for (int i = 0; i < frequencies.length; i++) {
-                if (frequencies[i] != 0) { flag = true; }
-            }
-            if (!flag || tiles.isEmpty()) { break; }
+        for (int i = 0; i < frequency; i++) {
+            int whichProp = new Random().nextInt(props.length);
+            int whichTile = tiles.get(new Random().nextInt(tiles.size()));
             
-            // Determine which prop to put and on which tile
-            int whichProp;
-            int whichTile;
-            do {
-                whichProp = random.nextInt(props.length);
-                whichTile = random.nextInt(tiles.size());
-            } while (frequencies[whichProp] != 0);
-                
+            Prop propCopy = null;
             try {
-                // Clone the prop and give it an anchor
-                Prop instance = props[whichProp].clone();
-                instance.setAnchor(whichTile);
-                
-                // Add it to the map
-                map.addProp(instance);
-                
-                // Clean up by decreasing the frequency of the prop by one,
-                // and remove the tile we've added a prop to from the list
-                frequencies[whichProp]--;
-                for (int i = 0; i < tiles.size(); i++) {
-                    if (tiles.get(i) == whichTile) {
-                        tiles.remove(i);
-                    }
-                }
+                propCopy = props[whichProp].clone();
             } catch (CloneNotSupportedException e) {
-                Globals.logError("CloneNotSupportedException in"
-                        + " PropCluster.create()", false);
-                return false;
+                Globals.logError("CloneNotSupportedException in createCluster()"
+                        + " - check Prop code", true);
             }
+            
+            propCopy.setAnchor(whichTile);
+            map.addProp(propCopy);
+            
         }
         
         // Return true, the cluster is complete.

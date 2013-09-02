@@ -93,7 +93,7 @@ public class ConfigFile {
      */
     public ConfigFile(String filename) throws FileNotFoundException {
         this.filename = filename;
-        scanner = new Scanner(new File(filename));
+        scanner = new Scanner(new File(filename), "UTF-8");
         StringBuilder builder = new StringBuilder();
             
         while (scanner.hasNextLine()) {
@@ -155,7 +155,8 @@ public class ConfigFile {
     
     /**
      * Returns the specified value of the current line (that is, what comes to
-     * the right of the equals sign).
+     * the right of the equals sign).  Returns null in the event of an invalid
+     * line.
      */
     public String getValue(int line) {
         try {
@@ -169,7 +170,8 @@ public class ConfigFile {
     
     /**
      * Perhaps the most useful function: returns the value of the specified
-     * property by searching the file from top to bottom.
+     * property by searching the file from top to bottom.  Returns null if the
+     * property is never found.
      */
     public String getValueByProperty(String property) {
         return getValue(getLineByProperty(property));
@@ -195,4 +197,17 @@ public class ConfigFile {
         lines = builder.toString().split("\\|");
     }
     
+    /**
+     * Returns the filename.
+     */
+    public String getFilename() {
+        return filename;
+    }
+    
+    /**
+     * Returns the raw line data in the form of a string array.
+     */
+    public String[] getLines() {
+        return lines;
+    }
 }

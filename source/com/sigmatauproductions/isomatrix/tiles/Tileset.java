@@ -81,6 +81,8 @@ public final class Tileset {
      */
     private String name = "";
     
+    private String directoryName = "";
+    
     /**
      * The vertical offset (y-offset) in pixels that all Props 
      * must be raised by in order to be placed correctly onto their anchor.
@@ -103,6 +105,7 @@ public final class Tileset {
         tileSizeX = tiles[0].getWidth();
         tileSizeY = tiles[0].getHeight();
         this.heightOffset = DEFAULT_HEIGHT_OFFSET;
+        this.directoryName = Globals.DEFAULT_TILESET;
         
         readConfig(Globals.TILESET_DIR + Globals.DEFAULT_TILESET);
         
@@ -128,7 +131,7 @@ public final class Tileset {
         
         tileSizeX = tiles[0].getWidth();
         tileSizeY = tiles[0].getHeight();
-        this.heightOffset = heightOffset;
+        this.directoryName = directory;
         readConfig(Globals.TILESET_DIR+directory);
     }
     
@@ -176,6 +179,10 @@ public final class Tileset {
      */
     public String getName() {
         return name;
+    }
+    
+    public String getDirectoryName() {
+        return directoryName;
     }
     
     /**

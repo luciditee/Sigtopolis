@@ -1,11 +1,12 @@
-import com.sigmatauproductions.isomatrix.demo.IsomatrixDemo;
-import org.newdawn.slick.SlickException;
-import com.sigmatauproductions.isomatrix.*;
 
-public class Game {
+import com.sigmatauproductions.isomatrix.game.IsomatrixBootstrap;
+import com.sigmatauproductions.sigtopolis.game.Sigtopolis;
+import org.newdawn.slick.SlickException;
+
+public final class Game {
     
     public static void main(String[] args) throws SlickException {
-        IsomatrixDemo.start();
+        IsomatrixBootstrap.start(new Sigtopolis());
     }
     
 }

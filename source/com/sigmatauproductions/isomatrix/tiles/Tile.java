@@ -33,6 +33,7 @@ import com.sigmatauproductions.isomatrix.*;
 import com.sigmatauproductions.isomatrix.props.Prop;
 import com.sigmatauproductions.isomatrix.util.Transform;
 import org.newdawn.slick.*;
+import org.newdawn.slick.geom.*;
 
 /**
  * The basic unit terrain of space for any Isomatrix-powered game.                          
@@ -125,6 +126,17 @@ public final class Tile {
      * 
      */
     private Tile() {}
+    
+    /**
+     * The normal color filter of a tile.
+     */
+    public static final Color NORMAL_COLOR = new Color(255, 255, 255);
+    
+    /**
+     * The current color of the tile, initially equal to
+     * {@code Tile.NORMAL_COLOR}.
+     */
+    private Color color = NORMAL_COLOR;
     
     /**
      * The typical constructor of a tile, used to populate the object with
@@ -330,6 +342,8 @@ public final class Tile {
      * 
      */
     public void draw() {
+        image.setImageColor(color.getRed()/255f, color.getGreen()/255f, 
+                color.getBlue()/255f);
         image.draw(position.x, position.y+position.z);
     }
     
@@ -342,6 +356,8 @@ public final class Tile {
      * 
      */
     public void draw(Transform offset) {
+        image.setImageColor(color.getRed()/255f, color.getGreen()/255f, 
+                color.getBlue()/255f);
         image.draw(offset.x+position.x, offset.y+position.y+position.z);
     }
     
@@ -403,6 +419,33 @@ public final class Tile {
     public void setProp(Prop p) {
         if (p == null) { return; }
         registeredProp = p;
+    }
+    
+    /**
+     * Returns true if the mouse is currently over this tile, given the tile's
+     * current offset and the game's current scale (zoom level).
+     * @param input
+     * @param offset
+     * @param scale
+     * @return 
+     */
+    public boolean isMouseOver(Input input, Transform offset, float scale) {
+        float mouseX = (input.getAbsoluteMouseX()/scale);
+        float mouseY = (input.getAbsoluteMouseY()/scale);
+        float relativeMouseX = (mouseX-getDrawPosition(offset).x+1);
+        float relativeMouseY = (mouseY-getDrawPosition(offset).y+1);
+        if (relativeMouseX < getWidth() && relativeMouseY < getHeight()
+                && relativeMouseX > 0 && relativeMouseY > 0) {
+            if (getImage().getColor((int)relativeMouseX, (int)relativeMouseY)
+                    .getAlpha() >= .5f) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    protected void setColor(Color c) {
+        color = c;
     }
     
 }
