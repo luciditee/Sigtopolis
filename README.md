@@ -1,14 +1,12 @@
 Sigtopolis
 ==========
 
+**Note:** Project is currently defunct and its engine is slated to be reimplemented in its own repository, with the game itself following.
+
 An open-source city simulator, powered by slick2d and isomatrix.
 
 Sigtopolis is an open-source city simulation game, using the
 slick2d/lwjgl libraries for rendering, sound, and
 pathfinding, as well as the custom-made Isomatrix game engine.
 
-Isomatrix uses Java and is therefore cross-platform on any 32 or
-64 bit system supporting LWJGL.
-
-Support can be found at http://sigmatauproductions.com/sigtopolis
-as well as on irc.bladerock.net, in channel #sigtau-dev.
+Questions regarding this game can be asked in #sigtau-dev on irc.bladerock.org.
